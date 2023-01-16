@@ -9,7 +9,7 @@ By creating your own implementation or by using the simple helpers provided with
 
 To get the latest version of `laravel-jira-rest-client`, run the following command
 ```shell
-composer require rjvandoesburg/laravel-jira-rest-client
+composer require masterarrow/laravel-jira-rest-client
 ```
 Do note that not all methods have been implemented yet.
 
