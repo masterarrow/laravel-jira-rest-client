@@ -12,7 +12,8 @@
         "php": ">=5.6.4",
         "laravel/framework": "*",
         "guzzlehttp/guzzle": "^6.0|^7.0",
-        "ext-json": "*"
+        "ext-json": "*",
+        "mrjoops/oauth2-jira": "^0.3.0"
     },
     "autoload": {
         "psr-4": {
@@ -33,7 +34,6 @@
         }
     },
     "suggest": {
-        "salsify/json-streaming-parser": "Require this when you want to parse the response in blocks",
-        "guzzlehttp/oauth-subscriber": "Required when using OAuth authentication"
+        "salsify/json-streaming-parser": "Require this when you want to parse the response in blocks"
     }
 }
