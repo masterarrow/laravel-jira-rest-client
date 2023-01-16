@@ -13,18 +13,14 @@ return [
             'middleware' => \Atlassian\JiraRest\Requests\Middleware\BasicAuthMiddleware::class,
         ],
 
-        'oauth' => [
-            'consumer_key' => env('JIRA_CONSUMER_KEY', ''),
-            'consumer_secret' => env('JIRA_CONSUMER_SECRET', ''),
+        'oauth2' => [
             'oauth_token' => env('JIRA_OAUTH_TOKEN', ''),
             'oauth_token_secret' => env('JIRA_OAUTH_TOKEN_SECRET', ''),
-            'private_key' => env('JIRA_PRIVATE_KEY', ''),
-            'private_key_passphrase' => env('JIRA_PRIVATE_KEY_PASSPHRASE', ''),
             'impersonate' => env('JIRA_IMPERSONATE', false),
 
             'routes' => env('JIRA_OAUTH_ROUTES', false),
 
-            'middleware' => \Atlassian\JiraRest\Requests\Middleware\OAuthMiddleware::class,
+            // 'middleware' => \Atlassian\JiraRest\Requests\Middleware\OAuthMiddleware::class,
         ],
 
         'basic_token' => [
