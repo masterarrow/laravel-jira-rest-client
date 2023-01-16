@@ -10,6 +10,7 @@ use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Http;
 
 abstract class AbstractRequest
 {
@@ -42,10 +43,10 @@ abstract class AbstractRequest
                     $middleware = config('atlassian.jira.auth.basic.middleware', \Atlassian\JiraRest\Requests\Middleware\BasicAuthMiddleware::class);
                     $this->addMiddleware($middleware , 'auth');
                     break;
-                case 'oauth':
-                    $middleware = config('atlassian.jira.auth.oauth.middleware', \Atlassian\JiraRest\Requests\Middleware\OAuthMiddleware::class);
-                    $this->addMiddleware($middleware , 'auth');
-                    break;
+                /*case 'oauth2':
+                    $middleware = config('atlassian.jira.auth.oauth2.middleware', \Atlassian\JiraRest\Requests\Middleware\OAuthMiddleware::class);
+                    $this->addMiddleware($middleware , 'auth2');
+                    break;*/
                 case 'basic_token':
                     $middleware = config('atlassian.jira.auth.basic_token.middleware', \Atlassian\JiraRest\Requests\Middleware\BasicApiTokenMiddleware::class);
                     $this->addMiddleware($middleware , 'auth');
@@ -65,16 +66,21 @@ abstract class AbstractRequest
     /**
      * @return \GuzzleHttp\Client
      */
-    public function createClient()
+    public function createClient($params = [])
     {
         // Default Options
         $options = [
             'base_uri' => config('atlassian.jira.host'),
             'headers'  => [
                 'Accept'       => 'application/json',
-                'Content-Type' => 'application/json',
+                'Content-Type' => 'application/json'
             ],
         ];
+
+        if (isset($params['token']) && isset($params['cloudId'])) {
+            $token = $params['token'];
+            $options['headers']['Authorization'] = "Bearer {$token}";
+        }
 
         // Pipe the options through all middleware defined in the config
         app(\Illuminate\Pipeline\Pipeline::class)
@@ -94,9 +100,9 @@ abstract class AbstractRequest
      *
      * @return \Psr\Http\Message\UriInterface
      */
-    public function getRequestUrl($resource)
+    public function getRequestUrl($resource, $params = [])
     {
-        return Psr7\Utils::uriFor($this->getApi().'/'.$resource);
+        return Psr7\Utils::uriFor($this->getApi($params).'/'.$resource);
     }
 
     /**
@@ -104,9 +110,15 @@ abstract class AbstractRequest
      *
      * @return string
      */
-    public function getApi()
+    public function getApi($params = [])
     {
-        return 'rest/api/2';
+        if (isset($params['cloudId'])) {
+            $cloudId = $params['cloudId'];
+
+            return "{$cloudId}/rest/api/2";
+        }
+
+        return '/rest/api/2';
     }
 
     /**
@@ -138,14 +150,25 @@ abstract class AbstractRequest
     protected function execute($method, $resource, $parameters = [], $asQueryParameters = false)
     {
         $method = strtoupper($method);
-        $client = $this->createClient();
+
+        $params = [];
+        if (config('atlassian.jira.default_auth') == 'oauth2' && isset($parameters['cloudId']) && isset($parameters['token'])) {
+            $params = [
+                'cloudId' => $parameters['cloudId'],
+                'token' => $parameters['token']
+            ];
+            unset($parameters['cloudId']);
+            unset($parameters['token']);
+        }
+
+        $client = $this->createClient($params);
 
         try {
             if ($this->async) {
-                return $client->requestAsync($method, $this->getRequestUrl($resource), $this->getOptions($method, $parameters, $asQueryParameters));
+                return $client->requestAsync($method, $this->getRequestUrl($resource, $params), $this->getOptions($method, $parameters, $asQueryParameters));
             }
 
-            return $client->request($method, $this->getRequestUrl($resource), $this->getOptions($method, $parameters, $asQueryParameters));
+            return $client->request($method, $this->getRequestUrl($resource, $params), $this->getOptions($method, $parameters, $asQueryParameters));
         } catch (RequestException $exception) {
             $message = $this->getJiraException($exception);
 
