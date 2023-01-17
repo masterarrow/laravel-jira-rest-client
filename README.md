@@ -132,8 +132,8 @@ $scopes = ['read:jira-user', 'read:jira-work', ...];
 
 // $clientId and $secret you can get from .env file
 
-$auth = new OAuthHandler($clientId, $secret, $url, $user-unique-identifier, $scopes);
-$auth->authenticate();
+$auth = new OAuthHandler($clientId, $secret, $url, , $scopes);
+$auth->authenticate($state);
 ```
 
 After that user user will be automaticaly redirected to Jira for authentication.
@@ -141,7 +141,7 @@ In you `callback-url` route:
 
 ```
 $params = $request->only('state', 'code');
-$data = $this->authHandler->getAccessTokens($params);
+$data = $this->authHandler->getAccessTokens($params['code']);
 
 // $data['cloudId']);
 // $data['accessToken']);
