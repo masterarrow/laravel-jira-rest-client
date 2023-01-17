@@ -1,5 +1,7 @@
 {
     "name": "masterarrow/laravel-jira-rest-client",
+    "description": "The aim of the package is to make it easier to communicate with the Jira",
+    "version": "0.0.1",
     "license": "MIT",
     "authors": [
         {
