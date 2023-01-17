@@ -11,6 +11,8 @@ use GuzzleHttp\Psr7;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
+use kamermans\OAuth2\GrantType\ClientCredentials;
+use kamermans\OAuth2\OAuth2Subscriber;
 
 abstract class AbstractRequest
 {
@@ -30,6 +32,16 @@ abstract class AbstractRequest
      * @var bool
      */
     protected $async = false;
+
+    /**
+     * @var string
+     */
+    protected $cloudId;
+
+    /**
+     * @var string
+     */
+    protected $token;
 
     /**
      * BaseRequest constructor.
@@ -77,9 +89,13 @@ abstract class AbstractRequest
             ],
         ];
 
-        if (isset($params['token']) && isset($params['cloudId'])) {
-            $token = $params['token'];
+        /*if (isset($params['accessToken']) && isset($params['cloudId'])) {
+            $token = $params['accessToken'];
             $options['headers']['Authorization'] = "Bearer {$token}";
+        }*/
+
+        if (isset($this->cloudId)) {
+            $options['headers']['Authorization'] = "Bearer {$this->token}";
         }
 
         // Pipe the options through all middleware defined in the config
@@ -100,9 +116,9 @@ abstract class AbstractRequest
      *
      * @return \Psr\Http\Message\UriInterface
      */
-    public function getRequestUrl($resource, $params = [])
+    public function getRequestUrl($resource)
     {
-        return Psr7\Utils::uriFor($this->getApi($params).'/'.$resource);
+        return Psr7\Utils::uriFor($this->getApi().'/'.$resource);
     }
 
     /**
@@ -112,10 +128,8 @@ abstract class AbstractRequest
      */
     public function getApi($params = [])
     {
-        if (isset($params['cloudId'])) {
-            $cloudId = $params['cloudId'];
-
-            return "{$cloudId}/rest/api/2";
+        if (isset($this->cloudId)) {
+            return $this->cloudId . '/rest/api/2';
         }
 
         return '/rest/api/2';
@@ -151,24 +165,20 @@ abstract class AbstractRequest
     {
         $method = strtoupper($method);
 
-        $params = [];
-        if (config('atlassian.jira.default_auth') == 'oauth2' && isset($parameters['cloudId']) && isset($parameters['token'])) {
-            $params = [
-                'cloudId' => $parameters['cloudId'],
-                'token' => $parameters['token']
-            ];
+        if (config('atlassian.jira.default_auth') == 'oauth2' && isset($parameters['cloudId']) && isset($parameters['accessToken'])) {
+            $this->setParameters($parameters);
             unset($parameters['cloudId']);
-            unset($parameters['token']);
+            unset($parameters['accessToken']);
         }
 
-        $client = $this->createClient($params);
+        $client = $this->createClient();
 
         try {
             if ($this->async) {
-                return $client->requestAsync($method, $this->getRequestUrl($resource, $params), $this->getOptions($method, $parameters, $asQueryParameters));
+                return $client->requestAsync($method, $this->getRequestUrl($resource), $this->getOptions($method, $parameters, $asQueryParameters));
             }
 
-            return $client->request($method, $this->getRequestUrl($resource, $params), $this->getOptions($method, $parameters, $asQueryParameters));
+            return $client->request($method, $this->getRequestUrl($resource), $this->getOptions($method, $parameters, $asQueryParameters));
         } catch (RequestException $exception) {
             $message = $this->getJiraException($exception);
 
@@ -292,6 +302,19 @@ abstract class AbstractRequest
         $this->middleware[$name ?? $middleware] = $middleware;
 
         return $this;
+    }
+
+    /**
+     * Set parameters
+     *
+     * @param array|\Illuminate\Contracts\Support\Arrayable $parameters
+     *
+     * @return bool
+     */
+    public function setParameters($parameters)
+    {
+        $this->cloudId = $parameters['cloudId'];
+        $this->token = $parameters['accessToken'];
     }
 
 }
