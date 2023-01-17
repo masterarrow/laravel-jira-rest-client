@@ -116,30 +116,60 @@ config('atlassian.jira.auth.basic.password', 'secret');
 Another implementation is session, but that is not (yet) implemented by this package.
 
 #### OAuth
-_To use OAuth you need to add the OAuth package for Guzzle: `composer require guzzlehttp/oauth-subscriber`_
-
-Lastly there is the option for OAuth, please read the Jira documentation first before continuing https://developer.atlassian.com/server/jira/platform/oauth/
-
-After reading that you need to create an application on Jira's side (as explained on that page) and set the credentials in you `.env`
+_To use OAuth 2.0 you need to add to your .env file:
 
 ```
-JIRA_HOST={url of your Jira instance}
-JIRA_CONSUMER_KEY={as set in Jira}
-JIRA_PRIVATE_KEY={full path location to your key used for authentication}
+JIRA_HOST=https://api.atlassian.com/ex/jira/
+JIRA_AUTHENTICATION=oauth2
 ```
 
-These credentials should be enough to talk to the api to login. In `src/Http/Controllers/OAuthController.php` you can find how you can do the 'oauth' dance.
-
-This controller can be enabled by setting `JIRA_OAUTH_ROUTES=true` in the `.env` file. Once enabled you are able to navigate to `/atlassian/jira/oauth/access` which will redirect you to Jira to grant access.
-
-Once that is done you will find oauth tokens in the session ([flashed](https://laravel.com/docs/5.8/redirects#redirecting-with-flashed-session-data)) which will allow you to request resources from Jira. 
-This allows you to decide where to store the keys e.g. database or session.
-Alternatively you can catch the event `\Atlassian\JiraRest\Events\OAuth\AccessTokensReceived` to handle the tokens.
-You can also set those credentials in the `.env` so you don't have to authenticate again in the future as tokens are valid for 5 years (according to Jira)
+To authenticate user:
 
 ```
-JIRA_OAUTH_TOKEN=
-JIRA_OAUTH_TOKEN_SECRET=
+$url = 'https://yuor-web-site/callback-url';
+
+$scopes = ['read:jira-user', 'read:jira-work', ...];
+
+// $clientId and $secret you can get from .env file
+
+$auth = new OAuthHandler($clientId, $secret, $url, $user-unique-identifier, $scopes);
+$auth->authenticate();
+```
+
+After that user user will be automaticaly redirected to Jira for authentication.
+In you `callback-url` route:
+
+```
+$params = $request->only('state', 'code');
+$data = $this->authHandler->getAccessTokens($params);
+
+// $data['cloudId']);
+// $data['accessToken']);
+// $data['refreshToken']);
+// $data['expires']);
+```
+
+Get issue with OAuth 2.0:
+
+```
+$params = [
+    'cloudId' => $cloudId,
+    'accessToken' => $accessToken,
+];
+
+$request = new \Atlassian\JiraRest\Requests\Issue\IssueRequest;
+$response = $request->get('ISSUE-3', $params);
+$response = json_decode($response->getBody(), true);
+```
+
+Refresh access token:
+
+```
+$data = OAuthHandler::refreshAccessTokens($clientId, $secret,, $refreshToken);
+
+// $data['accessToken']);
+// $data['refreshToken']);
+// $data['expires']);
 ```
 
 ### Helpers (deprecated)
@@ -205,11 +235,3 @@ However, it's also possible to impersonate a user manually by sending a user's n
 6. Click continue (ignore the warning). This should have created your new app link.
 7. Edit that link (notice there are no Outgoing info even if you added dummy info at creation).
 8. You may now enter all the info for OAuth and setup impersonation (Allow 2-Legged OAuth). 
-
-## TODO
-- Implement missing requests
-- Middleware
-- Better README
-- Sessions auth
-- A way to alter the request before it is send out (globally for each request and possibility for specific requests)
-- Tests
