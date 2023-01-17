@@ -2,16 +2,52 @@
 
 namespace Atlassian\JiraRest\Requests\Auth;
 
+use Atlassian\JiraRest\Exceptions\JiraClientException;
+use Atlassian\JiraRest\Requests\AbstractRequest;
+use GuzzleHttp\Exception\RequestException;
+use League\OAuth2\Client\Token\AccessToken;
 use Mrjoops\OAuth2\Client\Provider\Jira;
 use Atlassian\JiraRest\JiraRestServiceProvider;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
 
 
-class OAuthHandler
+class OAuthHandler extends Jira
 {
-    protected Jira $provider;
-    protected $state;
+    /**
+     * @var Jira
+     */
+    // protected Jira $provider;
+
+    /**
+     * @var string
+     */
+    //protected $clientId;
+
+    /**
+     * @var string
+     */
+    //protected $clientSecret;
+
+    /**
+     * @var string
+     */
+    // protected $state;
+
+    /**
+     * @var array
+     */
     protected $scopes;
+
+    /**
+     * @var string
+     */
+    protected $cloudId;
+
+    /**
+     * @var League\OAuth2\Client\Token\AccessToken
+     */
+    protected $token;
 
     /**
      * Setup OAuth2 provider
@@ -29,11 +65,17 @@ class OAuthHandler
         $this->state = $state;
         $this->scopes = $scopes;
 
-        $this->provider = new Jira([
+        parent::__construct([
             'clientId'          => $clientId,
             'clientSecret'      => $clientSecret,
             'redirectUri'       => $redirectUri,
         ]);
+
+        /*$this->provider = new Jira([
+            'clientId'          => $this->clientId,
+            'clientSecret'      => $this->clientSecret,
+            'redirectUri'       => $redirectUri,
+        ]);*/
     }
 
     /**
@@ -49,51 +91,101 @@ class OAuthHandler
             'scope' => $this->scopes
         ];
 
-        // If we don't have an authorization code then get one
-        $authUrl = $this->provider->getAuthorizationUrl($options);
+        // Get an authorization code
+        $authUrl = $this->getAuthorizationUrl($options);
         header('Location: ' . $authUrl);
         exit;
     }
 
     /**
-     * Handle authorezation redirect
+     * Get access tokens and cloud id
      *
-     * @param Request $request
-     * @return array ['cloudId' => string,  'token' => string,  'refreshToken' => string] or ['error' => string]
+     * @param array $parameters     Contains 'state' and 'code' returned to redirect URL be Jira
+     * @return array ['cloudId' => string,  'accessToken' => string,  'refreshToken' => string]
+     * @throws JiraClientException
      */
-    public function handleRedirect(Request $request)
+    public function getAccessTokens($parameters = [])
     {
-        $data = $request->only('state', 'code');
-
-        if (empty($data['state']) || ($data['state'] !== $this->state)) {
+        if (empty($parameters['state']) || ($parameters['state'] !== $this->state)) {
             // Check given state against previously stored one to mitigate CSRF attack
             exit('Invalid state');
         } else {
             // Try to get an access token (using the authorization code grant)
-            $token = $this->provider->getAccessToken('authorization_code', [
-                'code' => $data['code']
+            $this->token = $this->getAccessToken('authorization_code', [
+                'code' => $parameters['code']
             ]);
 
-            // Optional: Now you have a token you can look up a users profile data
             try {
-                // We got an access token, let's now get the user's details
-                $user = $this->provider->getResourceOwner($token);
+                // Get the user's details
+                $user = $this->getResourceOwner($this->token);
 
-                $cloudId = explode('/', parse_url($user->toArray()['self'])['path'])[3];
+                // Get cloud id
+                $this->cloudId = explode('/', parse_url($user->toArray()['self'])['path'])[3];
 
-                $request->session()->flash('cloudId', $cloudId);
-                $request->session()->flash('token', $token->getToken());
-                $request->session()->flash('refreshToken', $token->getRefreshToken());
-
-                // return redirect('/connected');
                 return [
-                    'cloudId' => $cloudId,
-                    'token' => $token->getToken(),
-                    'refreshToken' => $token->getRefreshToken()
+                    'cloudId' => $this->cloudId,
+                    'accessToken' => $this->token->getToken(),
+                    'refreshToken' => $this->token->getRefreshToken()
                 ];
-            } catch (Exception $e) {
-                return ['error' => 'Failed to get tokens'];
+            } catch (RequestException $exception) {
+                throw new JiraClientException($exception->getMessage(), $exception->getCode(), $exception);
             }
         }
+    }
+
+    /**
+     * Refresh access tokens
+     *
+     * @param $token
+     * @param $refreshToken
+     * @return array
+     * @throws JiraClientException
+     */
+    public function refreshAccessTokens($refreshToken)
+    {
+        $response = $this->getHttpClient()->request('POST', $this->getRefreshTokenUrl(), [
+                'grant_type' => 'refresh_token',
+                'client_id' => $this->cloudId,
+                'client_secret' => $this->clientSecret,
+                'refresh_token' => $refreshToken
+            ]);
+
+        if ($response->getStatusCode() === 200) {
+            $result = json_decode($response->getBody(), true);
+
+            $this->token = new AccessToken($result);
+
+            return [
+                'cloudId' => $this->cloudId,
+                'accessToken' => $this->token->getToken(),
+                'refreshToken' => $this->token->getRefreshToken(),
+                'expires' => $this->token->getExpires(),
+            ];
+        } else {
+            throw new JiraClientException('Cannot get a new access token', $response->getStatusCode());
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public function getRefreshTokenUrl()
+    {
+        return 'https://auth.atlassian.com/oauth/token';
+    }
+
+    /**
+     * Return cloud id, access token and refresh token
+     *
+     * @return array
+     */
+    public function getAccessCredentials()
+    {
+        return [
+            'cloudId' => $this->cloudId,
+            'accessToken' => $this->token->getToken(),
+            'refreshToken' => $this->token->getRefreshToken(),
+            'expires' => $this->token->getExpires()
+        ];
     }
 }
