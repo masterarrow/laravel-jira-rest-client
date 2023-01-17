@@ -38,11 +38,8 @@ class OAuthHandler
      * @param string $state             User unique identifier
      * @param array $scopes             Array of Jira permissions
      */
-    public function __construct($clientId, $clientSecret, $redirectUri,
-                                $state = 'OPTIONAL_CUSTOM_CONFIGURED_STATE',
-                                $scopes = ['read:jira-user', 'read:jira-work'])
+    public function __construct($clientId, $clientSecret, $redirectUri, $scopes = ['read:jira-user', 'read:jira-work'])
     {
-        $this->state = $state;
         $this->scopes = $scopes;
 
         $this->provider = new Jira([
@@ -55,20 +52,18 @@ class OAuthHandler
     /**
      * Authenticate Jira user
      *
-     * @return Redirect to Jira authentication page
+         * @return string   Authorization URL
      */
-    public function authenticate()
+    public function authorizationUrl($state = 'OPTIONAL_CUSTOM_CONFIGURED_STATE')
     {
         // Scopes
         $options = [
-            'state' => $this->state,
+            'state' => $state,
             'scope' => $this->scopes
         ];
 
-        // Get an authorization code
-        $authUrl = $this->provider->getAuthorizationUrl($options);
-        header('Location: ' . $authUrl);
-        exit;
+        // Get an authorization code following this url
+        return $this->provider->getAuthorizationUrl($options);
     }
 
     /**
