@@ -122,10 +122,10 @@ class OAuthHandler extends Jira
      * @return array
      * @throws JiraClientException
      */
-    public function refreshAccessTokens($clientId, $clientSecret, $refreshToken)
+    public static function refreshAccessTokens($clientId, $clientSecret, $refreshToken)
     {
         $response = Http::accept('application/json')
-            ->post($this->getRefreshTokenUrl(), [
+            ->post(OAuthHandler::getRefreshTokenUrl(), [
                 'grant_type' => 'refresh_token',
                 'client_id' => $clientId,
                 'client_secret' => $clientSecret,
@@ -135,12 +135,12 @@ class OAuthHandler extends Jira
         if ($response->status() === 200) {
             $result = json_decode($response->body(), true);
 
-            $this->token = new AccessToken($result);
+            $token = new AccessToken($result);
 
             return [
-                'accessToken' => $this->token->getToken(),
-                'refreshToken' => $this->token->getRefreshToken(),
-                'expires' => $this->token->getExpires(),
+                'accessToken' => $token->getToken(),
+                'refreshToken' => $token->getRefreshToken(),
+                'expires' => $token->getExpires(),
             ];
         } else {
             throw new JiraClientException('Cannot get a new access token', $response->getStatusCode());
@@ -150,7 +150,7 @@ class OAuthHandler extends Jira
     /**
      * @return string
      */
-    public function getRefreshTokenUrl()
+    public static function getRefreshTokenUrl()
     {
         return 'https://auth.atlassian.com/oauth/token';
     }
