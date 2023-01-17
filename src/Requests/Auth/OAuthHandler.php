@@ -15,26 +15,6 @@ use Illuminate\Http\Request;
 class OAuthHandler extends Jira
 {
     /**
-     * @var Jira
-     */
-    // protected Jira $provider;
-
-    /**
-     * @var string
-     */
-    //protected $clientId;
-
-    /**
-     * @var string
-     */
-    //protected $clientSecret;
-
-    /**
-     * @var string
-     */
-    // protected $state;
-
-    /**
      * @var array
      */
     protected $scopes;
@@ -142,22 +122,22 @@ class OAuthHandler extends Jira
      * @return array
      * @throws JiraClientException
      */
-    public function refreshAccessTokens($refreshToken)
+    public function refreshAccessTokens($clientId, $clientSecret, $refreshToken)
     {
-        $response = $this->getHttpClient()->request('POST', $this->getRefreshTokenUrl(), [
+        $response = Http::accept('application/json')
+            ->post($this->getRefreshTokenUrl(), [
                 'grant_type' => 'refresh_token',
-                'client_id' => $this->cloudId,
-                'client_secret' => $this->clientSecret,
+                'client_id' => $clientId,
+                'client_secret' => $clientSecret,
                 'refresh_token' => $refreshToken
             ]);
 
-        if ($response->getStatusCode() === 200) {
-            $result = json_decode($response->getBody(), true);
+        if ($response->status() === 200) {
+            $result = json_decode($response->body(), true);
 
             $this->token = new AccessToken($result);
 
             return [
-                'cloudId' => $this->cloudId,
                 'accessToken' => $this->token->getToken(),
                 'refreshToken' => $this->token->getRefreshToken(),
                 'expires' => $this->token->getExpires(),
