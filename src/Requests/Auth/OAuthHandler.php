@@ -125,7 +125,8 @@ class OAuthHandler extends Jira
                 return [
                     'cloudId' => $this->cloudId,
                     'accessToken' => $this->token->getToken(),
-                    'refreshToken' => $this->token->getRefreshToken()
+                    'refreshToken' => $this->token->getRefreshToken(),
+                    'expires' => $this->token->getExpires(),
                 ];
             } catch (RequestException $exception) {
                 throw new JiraClientException($exception->getMessage(), $exception->getCode(), $exception);
