@@ -142,7 +142,7 @@ class OAuthHandler
     /**
      * Get current user
     */
-    public static function getOwner($token)
+    public function getOwner($token)
     {
         return $this->provider->getResourceOwner($token);
     }
