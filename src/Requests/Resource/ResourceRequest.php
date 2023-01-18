@@ -6,14 +6,6 @@ use Atlassian\JiraRest\Requests\AbstractRequest;
 
 class ResourceRequest extends AbstractRequest
 {
-    use Traits\AvatarRequests;
-    use Traits\ComponentsRequests;
-    use Traits\PermissionsSchemesRequests;
-    use Traits\PropertiesRequests;
-    use Traits\RoleRequests;
-    use Traits\TypesRequests;
-    use Traits\VersionsRequests;
-
     /**
      * Returns all projects visible for the currently logged in user, ie. all the projects the user has either ‘Browse
      * projects’ or ‘Administer projects’ permission.
