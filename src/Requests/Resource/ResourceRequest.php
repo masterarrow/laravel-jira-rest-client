@@ -1,6 +1,6 @@
 <?php
 
-namespace Atlassian\JiraRest\Requests\Project;
+namespace Atlassian\JiraRest\Requests\Resource;
 
 use Atlassian\JiraRest\Requests\AbstractRequest;
 
