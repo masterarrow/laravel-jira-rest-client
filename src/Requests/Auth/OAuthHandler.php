@@ -138,4 +138,12 @@ class OAuthHandler
     {
         return 'https://auth.atlassian.com/oauth/token';
     }
+    
+    /**
+     * Get current user
+    */
+    public static function getOwner($token)
+    {
+        return $this->provider->getResourceOwner($token);
+    }
 }
