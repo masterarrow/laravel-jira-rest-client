@@ -117,7 +117,7 @@ class OAuthHandler extends Jira
      */
     public function refreshAccessTokens($clientId, $clientSecret, $refreshToken)
     {
-        /*$response = Http::accept('application/json')
+        $response = Http::accept('application/json')
             ->post($this->getRefreshTokenUrl(), [
                 'grant_type' => 'refresh_token',
                 'client_id' => $clientId,
@@ -137,31 +137,6 @@ class OAuthHandler extends Jira
             ];
         } else {
             throw new JiraClientException('Cannot get a new access token', $response->status());
-        }*/
-
-        $url = $this->getRequestUri() . $resource;
-
-        $parameters = [
-            'grant_type' => 'refresh_token',
-            'client_id' => $clientId,
-            'client_secret' => $clientSecret,
-            'refresh_token' => $refreshToken
-        ];
-
-        $res = $this->getHttpClient()->request('POST', $this->getRefreshTokenUrl(), $parameters);
-
-        if ($res->getStatusCode() == 200) {
-            $result = json_decode($res->getBody()->getContents(), true);
-
-            $this->token = new AccessToken($result);
-
-            return [
-                'accessToken' => $this->token->getToken(),
-                'refreshToken' => $this->token->getRefreshToken(),
-                'expires' => $this->token->getExpires(),
-            ];
-        } else {
-            throw new JiraClientException('Cannot get a new access token', $response->getStatusCode());
         }
     }
 
@@ -198,14 +173,14 @@ class OAuthHandler extends Jira
     {
         $url = $this->getRequestUri() . $resource;
 
-        $parameters['headers']['Authorization'] = "Bearer {$this->token->getToken()}";
+        $response = Http::accept('application/json')
+            ->withToken($this->token->getToken())
+            ->send($method, $url, $parameters);
 
-        $res = $this->getHttpClient()->request($method, $url, $parameters);
-
-        if ($res->getStatusCode() == 200) {
-            return json_decode($res->getBody()->getContents(), true);
+        if ($response->status() === 200) {
+            return json_decode($response->body(), true);
         } else {
-            throw new JiraClientException($res->getBody()->getContents(), $response->getStatusCode());
+            throw new JiraClientException($response->body(), $response->status());
         }
     }
 
@@ -323,7 +298,7 @@ class OAuthHandler extends Jira
         $this->token = new AccessToken([
             'access_token' => $parameters['accessToken'],
             'refresh_token' => $parameters['refreshToken'],
-            'expires' => $parameters['expires'],
+            'expires_in' => $parameters['expires']
         ]);
     }
 }
