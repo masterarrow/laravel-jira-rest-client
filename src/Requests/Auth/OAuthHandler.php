@@ -3,7 +3,9 @@
 namespace Atlassian\JiraRest\Requests\Auth;
 
 use Atlassian\JiraRest\Exceptions\JiraClientException;
+use Atlassian\JiraRest\Helpers\Issue;
 use Atlassian\JiraRest\Requests\AbstractRequest;
+use Atlassian\JiraRest\Requests\Resource\ResourceRequest;
 use GuzzleHttp\Exception\RequestException;
 use League\OAuth2\Client\Token\AccessToken;
 use Mrjoops\OAuth2\Client\Provider\Jira;
@@ -12,13 +14,8 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
 
 
-class OAuthHandler
+class OAuthHandler extends Jira
 {
-    /**
-     * @var Jira
-     */
-    protected $provider;
-
     /**
      * @var string
      */
@@ -28,6 +25,16 @@ class OAuthHandler
      * @var array
      */
     protected $scopes;
+
+    /**
+     * @var string
+     */
+    protected $cloudId;
+
+    /**
+     * @var AccessToken
+     */
+    protected $token;
 
     /**
      * Setup OAuth2 provider
@@ -42,7 +49,7 @@ class OAuthHandler
     {
         $this->scopes = $scopes;
 
-        $this->provider = new Jira([
+        parent::__construct([
             'clientId'          => $clientId,
             'clientSecret'      => $clientSecret,
             'redirectUri'       => $redirectUri,
@@ -56,14 +63,16 @@ class OAuthHandler
      */
     public function authorizationUrl($state = 'OPTIONAL_CUSTOM_CONFIGURED_STATE')
     {
+        $this->state = $state;
+
         // Scopes
         $options = [
-            'state' => $state,
+            'state' => $this->state,
             'scope' => $this->scopes
         ];
 
         // Get an authorization code following this url
-        return $this->provider->getAuthorizationUrl($options);
+        return $this->getAuthorizationUrl($options);
     }
 
     /**
@@ -76,22 +85,22 @@ class OAuthHandler
     public function getAccessTokens($code)
     {
         // Try to get an access token (using the authorization code grant)
-        $token = $this->provider->getAccessToken('authorization_code', [
+        $this->token = $this->getAccessToken('authorization_code', [
             'code' => $code
         ]);
 
         try {
             // Get the user's details
-            $user = $this->provider->getResourceOwner($token);
+            $user = $this->getResourceOwner($this->token);
 
             // Get cloud id
-            $cloudId = explode('/', parse_url($user->toArray()['self'])['path'])[3];
+            $this->cloudId = explode('/', parse_url($user->toArray()['self'])['path'])[3];
 
             return [
-                'cloudId' => $cloudId,
-                'accessToken' => $token->getToken(),
-                'refreshToken' => $token->getRefreshToken(),
-                'expires' => $token->getExpires(),
+                'cloudId' => $this->cloudId,
+                'accessToken' => $this->token->getToken(),
+                'refreshToken' => $this->token->getRefreshToken(),
+                'expires' => $this->token->getExpires(),
             ];
         } catch (RequestException $exception) {
             throw new JiraClientException($exception->getMessage(), $exception->getCode(), $exception);
@@ -106,10 +115,10 @@ class OAuthHandler
      * @return array
      * @throws JiraClientException
      */
-    public static function refreshAccessTokens($clientId, $clientSecret, $refreshToken)
+    public function refreshAccessTokens($clientId, $clientSecret, $refreshToken)
     {
-        $response = Http::accept('application/json')
-            ->post(OAuthHandler::getRefreshTokenUrl(), [
+        /*$response = Http::accept('application/json')
+            ->post($this->getRefreshTokenUrl(), [
                 'grant_type' => 'refresh_token',
                 'client_id' => $clientId,
                 'client_secret' => $clientSecret,
@@ -119,12 +128,37 @@ class OAuthHandler
         if ($response->status() === 200) {
             $result = json_decode($response->body(), true);
 
-            $token = new AccessToken($result);
+            $this->token = new AccessToken($result);
 
             return [
-                'accessToken' => $token->getToken(),
-                'refreshToken' => $token->getRefreshToken(),
-                'expires' => $token->getExpires(),
+                'accessToken' => $this->token->getToken(),
+                'refreshToken' => $this->token->getRefreshToken(),
+                'expires' => $this->token->getExpires(),
+            ];
+        } else {
+            throw new JiraClientException('Cannot get a new access token', $response->status());
+        }*/
+
+        $url = $this->getRequestUri() . $resource;
+
+        $parameters = [
+            'grant_type' => 'refresh_token',
+            'client_id' => $clientId,
+            'client_secret' => $clientSecret,
+            'refresh_token' => $refreshToken
+        ];
+
+        $res = $this->getHttpClient()->request('POST', $this->getRefreshTokenUrl(), $parameters);
+
+        if ($res->getStatusCode() == 200) {
+            $result = json_decode($res->getBody()->getContents(), true);
+
+            $this->token = new AccessToken($result);
+
+            return [
+                'accessToken' => $this->token->getToken(),
+                'refreshToken' => $this->token->getRefreshToken(),
+                'expires' => $this->token->getExpires(),
             ];
         } else {
             throw new JiraClientException('Cannot get a new access token', $response->getStatusCode());
@@ -134,16 +168,152 @@ class OAuthHandler
     /**
      * @return string
      */
-    public static function getRefreshTokenUrl()
+    public function getRefreshTokenUrl()
     {
         return 'https://auth.atlassian.com/oauth/token';
     }
-    
+
     /**
-     * Get current user
-    */
-    public function getOwner($token)
+     * Get authenticated user information
+     *
+     * @return \League\OAuth2\Client\Provider\ResourceOwnerInterface
+     */
+    public function getOwner()
     {
-        return $this->provider->getResourceOwner($token);
+        return $this->getResourceOwner($this->token);
+    }
+
+    /**
+     * Make a reguest to the resource URL
+     *
+     * @param string $method        GET, POST, ...
+     * @param string $resource      Resource URL (example 'issue/TEST-1')
+     * @param array $parameters
+     * @return mixed|array
+     *
+     * @throws JiraClientException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function sendRequest($method, $resource, $parameters = [])
+    {
+        $url = $this->getRequestUri() . $resource;
+
+        $parameters['headers']['Authorization'] = "Bearer {$this->token->getToken()}";
+
+        $res = $this->getHttpClient()->request($method, $url, $parameters);
+
+        if ($res->getStatusCode() == 200) {
+            return json_decode($res->getBody()->getContents(), true);
+        } else {
+            throw new JiraClientException($res->getBody()->getContents(), $response->getStatusCode());
+        }
+    }
+
+    /**
+     * @return string
+     */
+    private function getRequestUri()
+    {
+        return config('atlassian.jira.host') . $this->cloudId . '/rest/api/2/';
+    }
+
+    /**
+     * Get cloud id and access token
+     *
+     * @return array
+     */
+    public function getAuthParams()
+    {
+        return [
+            'cloudId' => $this->cloudId,
+            'accessToken' => $this->token->getToken()
+        ];
+    }
+
+    /**
+     * Project
+     *
+     * @return \Atlassian\JiraRest\Requests\Project\ProjectRequest
+     */
+    public function project()
+    {
+        return new \Atlassian\JiraRest\Requests\Project\ProjectRequest($this->getAuthParams());
+    }
+
+    /**
+     * Dashboard
+     *
+     * @return \Atlassian\JiraRest\Requests\Dashboard\DashboardRequest
+     */
+    public function dashboard()
+    {
+        return new \Atlassian\JiraRest\Requests\Dashboard\DashboardRequest($this->getAuthParams());
+    }
+
+    /**
+     * Issue
+     *
+     * @return \Atlassian\JiraRest\Requests\Issue\IssueRequest
+     */
+    public function issue()
+    {
+        return new \Atlassian\JiraRest\Requests\Issue\IssueRequest($this->getAuthParams());
+    }
+
+    /**
+     * Field
+     *
+     * @return \Atlassian\JiraRest\Requests\Field\FieldRequest
+     */
+    public function field()
+    {
+        return new \Atlassian\JiraRest\Requests\Field\FieldRequest($this->getAuthParams());
+    }
+
+    /**
+     * Group
+     *
+     * @return \Atlassian\JiraRest\Requests\Group\GroupRequest
+     */
+    public function group()
+    {
+        return new \Atlassian\JiraRest\Requests\Group\GroupRequest($this->getAuthParams());
+    }
+
+    /**
+     * User
+     *
+     * @return \Atlassian\JiraRest\Requests\User\UserRequest
+     */
+    public function user()
+    {
+        return new \Atlassian\JiraRest\Requests\User\UserRequest($this->getAuthParams());
+    }
+
+    /**
+     * Any Jira resource
+     *
+     * @return ResourceRequest
+     */
+    public function resource()
+    {
+        return new \Atlassian\JiraRest\Requests\Resource\ResourceRequest($this->getAuthParams());
+    }
+
+    /**
+     * Set authentication parameters
+     *
+     * @param array|\Illuminate\Contracts\Support\Arrayable $parameters ['cloudId', 'accessToken', 'refreshToken', 'expires']
+     *
+     * @return bool
+     */
+    public function setAuthParameters($parameters = [])
+    {
+        $this->cloudId = $parameters['cloudId'] ?? $this->cloudId;
+        $this->token = new AccessToken([
+            'access_token' => $parameters['accessToken'],
+            'refresh_token' => $parameters['refreshToken'],
+            'expires' => $parameters['expires'],
+        ]);
     }
 }
