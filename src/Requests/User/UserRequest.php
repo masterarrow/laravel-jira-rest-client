@@ -7,6 +7,16 @@ use Atlassian\JiraRest\Requests\AbstractRequest;
 class UserRequest extends AbstractRequest
 {
     /**
+     * @param array $options ['cloudId' => string, 'accessToken' => sting]
+     */
+    public function __construct($options = [])
+    {
+        if (isset($options['cloudId']) && isset($options['accessToken'])) {
+            parent::__construct($options);
+        }
+    }
+    
+    /**
      * Returns a user.
      * This resource cannot be accessed anonymously.
      *
