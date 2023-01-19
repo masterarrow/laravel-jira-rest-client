@@ -7,6 +7,16 @@ use Atlassian\JiraRest\Requests\AbstractRequest;
 class GroupRequest extends AbstractRequest
 {
     /**
+     * @param array $options ['cloudId' => string, 'accessToken' => sting]
+     */
+    public function __construct($options = [])
+    {
+        if (isset($options['cloudId']) && isset($options['accessToken'])) {
+            parent::__construct($options);
+        }
+    }
+    
+    /**
      * Returns a list of groups whose names contain a query string and, optionally, a user.
      * A list of group names can be provided to exclude groups from the results.
      *
