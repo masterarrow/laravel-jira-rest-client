@@ -13,6 +13,16 @@ class ProjectRequest extends AbstractRequest
     use Traits\RoleRequests;
     use Traits\TypesRequests;
     use Traits\VersionsRequests;
+    
+    /**
+     * @param array $options ['cloudId' => string, 'accessToken' => sting]
+     */
+    public function __construct($options = [])
+    {
+        if (isset($options['cloudId']) && isset($options['accessToken'])) {
+            parent::__construct($options);
+        }
+    }
 
     /**
      * Returns all projects visible for the currently logged in user, ie. all the projects the user has either ‘Browse
