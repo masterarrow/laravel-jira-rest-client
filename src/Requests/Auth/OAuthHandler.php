@@ -291,6 +291,16 @@ class OAuthHandler extends Jira
     }
 
     /**
+     * Workflow
+     *
+     * @return \Atlassian\JiraRest\Requests\Workflow\WorkflowRequest
+     */
+    public function workflow()
+    {
+        return new \Atlassian\JiraRest\Requests\Workflow\WorkflowRequest($this->getAuthParams());
+    }
+
+    /**
      * Any Jira resource
      *
      * @return ResourceRequest
