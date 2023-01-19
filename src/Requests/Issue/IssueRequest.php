@@ -17,6 +17,16 @@ class IssueRequest extends AbstractRequest
     use Traits\WorklogsRequests;
 
     /**
+     * @param array $options ['cloudId' => string, 'accessToken' => sting]
+     */
+    public function __construct($options = [])
+    {
+        if (isset($options['cloudId']) && isset($options['accessToken'])) {
+            parent::__construct($options);
+        }
+    }
+
+    /**
      * Creates an issue or a sub-task from a JSON representation.
      *
      * @see https://developer.atlassian.com/cloud/jira/platform/rest/v3/#api-rest-api-3-issue-post
