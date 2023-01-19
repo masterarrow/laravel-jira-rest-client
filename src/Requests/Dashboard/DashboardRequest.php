@@ -23,7 +23,6 @@ class DashboardRequest extends AbstractRequest
      *
      * @see https://developer.atlassian.com/cloud/jira/platform/rest/v3/#api-rest-api-3-project-get
      *
-     * @param  string $resource
      * @param  array|\Illuminate\Contracts\Support\Arrayable  $parameters
      *
      * @return \GuzzleHttp\Psr7\Response
@@ -32,17 +31,15 @@ class DashboardRequest extends AbstractRequest
      * @throws \Atlassian\JiraRest\Exceptions\JiraUnauthorizedException
      * @throws \GuzzleHttp\Exception\GuzzleException
      *
-     * @deprecated Use search instead
      */
-    public function all($resourse, $parameters = [])
+    public function all($parameters = [])
     {
-        return $this->execute('get', $resourse, $parameters);
+        return $this->execute('get', 'dashboard', $parameters);
     }
 
     /**
      * Creates a new project from a JSON representation.
      *
-     * @param string $resource
      * @see https://developer.atlassian.com/cloud/jira/platform/rest/v3/#api-rest-api-3-project-post
      *
      * @param  array|\Illuminate\Contracts\Support\Arrayable  $parameters
@@ -53,9 +50,9 @@ class DashboardRequest extends AbstractRequest
      * @throws \Atlassian\JiraRest\Exceptions\JiraUnauthorizedException
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function create($resource, $parameters = [])
+    public function create($parameters = [])
     {
-        return $this->execute('post', $resource, $parameters);
+        return $this->execute('post', 'dashboard', $parameters);
     }
 
     /**
@@ -65,7 +62,6 @@ class DashboardRequest extends AbstractRequest
      *
      * @see https://developer.atlassian.com/cloud/jira/platform/rest/v3/#api-rest-api-3-project-search-get
      *
-     * @param  string $resource
      * @param  array|\Illuminate\Contracts\Support\Arrayable  $parameters
      *
      * @return \GuzzleHttp\Psr7\Response
@@ -74,9 +70,9 @@ class DashboardRequest extends AbstractRequest
      * @throws \Atlassian\JiraRest\Exceptions\JiraUnauthorizedException
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function search($resource, $parameters = [])
+    public function search($parameters = [])
     {
-        return $this->execute('get', $resource . '/search', $parameters);
+        return $this->execute('get', 'dashboard/search', $parameters);
     }
 
     /**
@@ -84,8 +80,7 @@ class DashboardRequest extends AbstractRequest
      *
      * @see https://developer.atlassian.com/cloud/jira/platform/rest/v3/#api-rest-api-3-project-projectIdOrKey-get
      *
-     * @param  string $resource
-     * @param  int|string  $resourceIdOrKey
+     * @param  int|string  $dashboardIdOrKey
      * @param  array|\Illuminate\Contracts\Support\Arrayable  $parameters
      *
      * @return \GuzzleHttp\Psr7\Response
@@ -94,9 +89,9 @@ class DashboardRequest extends AbstractRequest
      * @throws \Atlassian\JiraRest\Exceptions\JiraUnauthorizedException
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function get($resource, $resourceIdOrKey, $parameters = [])
+    public function get($dashboardIdOrKey, $parameters = [])
     {
-        return $this->execute('get', "{$resource}}/{$resourceIdOrKey}", $parameters);
+        return $this->execute('get', "dashboard/{$dashboardIdOrKey}", $parameters);
     }
 
     /**
@@ -104,8 +99,7 @@ class DashboardRequest extends AbstractRequest
      *
      * @see https://developer.atlassian.com/cloud/jira/platform/rest/v3/#api-rest-api-3-project-projectIdOrKey-put
      *
-     * @param  string $resource
-     * @param  int|string  $resourceIdOrKey
+     * @param  int|string  $dashboardIdOrKey
      * @param  array|\Illuminate\Contracts\Support\Arrayable  $parameters
      *
      * @return \GuzzleHttp\Psr7\Response
@@ -114,9 +108,9 @@ class DashboardRequest extends AbstractRequest
      * @throws \Atlassian\JiraRest\Exceptions\JiraUnauthorizedException
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function update($resource, $resourceIdOrKey, $parameters = [])
+    public function update($dashboardIdOrKey, $parameters = [])
     {
-        return $this->execute('put', "{$resource}/{$resourceIdOrKey}", $parameters);
+        return $this->execute('put', "dashboard/{$dashboardIdOrKey}", $parameters);
     }
 
     /**
@@ -124,8 +118,7 @@ class DashboardRequest extends AbstractRequest
      *
      * @see https://developer.atlassian.com/cloud/jira/platform/rest/v3/#api-rest-api-3-project-projectIdOrKey-delete
      *
-     * @param  string $resource
-     * @param  int|string  $resourceIdOrKey
+     * @param  int|string  $dashboardIdOrKey
      *
      * @return \GuzzleHttp\Psr7\Response
      * @throws \Atlassian\JiraRest\Exceptions\JiraClientException
@@ -133,9 +126,9 @@ class DashboardRequest extends AbstractRequest
      * @throws \Atlassian\JiraRest\Exceptions\JiraUnauthorizedException
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function delete($resource, $resourceOrKey)
+    public function delete($dashboardIdOrKey)
     {
-        return $this->execute('delete', "{$resource}/{$resourceIdOrKey}");
+        return $this->execute('delete', "dashboard/{$dashboardIdOrKey}");
     }
 
     /**
@@ -144,8 +137,7 @@ class DashboardRequest extends AbstractRequest
      *
      * @see https://developer.atlassian.com/cloud/jira/platform/rest/v3/#api-rest-api-3-project-projectIdOrKey-statuses-get
      *
-     * @param  string $resource
-     * @param  int|string  $resourceIdOrKey
+     * @param  int|string  $dashboardIdOrKey
      *
      * @return \GuzzleHttp\Psr7\Response
      * @throws \Atlassian\JiraRest\Exceptions\JiraClientException
@@ -153,9 +145,9 @@ class DashboardRequest extends AbstractRequest
      * @throws \Atlassian\JiraRest\Exceptions\JiraUnauthorizedException
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function getStatuses($resource, $resourceIdOrKey)
+    public function getStatuses($dashboardIdOrKey)
     {
-        return $this->execute('get', "project/{$resourceIdOrKey}/statuses");
+        return $this->execute('get', "project/{$dashboardIdOrKey}/statuses");
     }
 
     /**
@@ -163,9 +155,8 @@ class DashboardRequest extends AbstractRequest
      *
      * @see https://developer.atlassian.com/cloud/jira/platform/rest/v3/#api-rest-api-3-project-projectIdOrKey-type-newProjectTypeKey-put
      *
-     * @param  string $resource
-     * @param  int|string  $resourceIdOrKey
-     * @param  string  $newResourceTypeKey
+     * @param  int|string  $dashboardIdOrKey
+     * @param  string  $newDashboardTypeKey
      *
      * @return \GuzzleHttp\Psr7\Response
      * @throws \Atlassian\JiraRest\Exceptions\JiraClientException
@@ -175,9 +166,9 @@ class DashboardRequest extends AbstractRequest
      *
      * @deprecated Deprecated, this feature is no longer supported and no alternatives are available.
      */
-    public function updateProjectType($resource, $resourceIdOrKey, $newResourceTypeKey)
+    public function updateProjectType($dashboardIdOrKey, $newDashboardTypeKey)
     {
-        return $this->execute('put', "{$resource}/{$resourceIdOrKey}/type/{$newResourceTypeKey}");
+        return $this->execute('put', "dashboard/{$dashboardIdOrKey}/type/{$newDashboardTypeKey}");
     }
 
     /**
@@ -185,8 +176,7 @@ class DashboardRequest extends AbstractRequest
      *
      * @see https://developer.atlassian.com/cloud/jira/platform/rest/v3/#api-rest-api-3-project-projectKeyOrId-notificationscheme-get
      *
-     * @param  string $resource
-     * @param  int|string  $resourceIdOrKey
+     * @param  int|string  $dashboardIdOrKey
      * @param  array|\Illuminate\Contracts\Support\Arrayable  $parameters
      *
      * @return \GuzzleHttp\Psr7\Response
@@ -195,8 +185,8 @@ class DashboardRequest extends AbstractRequest
      * @throws \Atlassian\JiraRest\Exceptions\JiraUnauthorizedException
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function getNotificationScheme($resource, $resourceIdOrKey, $parameters = [])
+    public function getNotificationScheme($dashboardIdOrKey, $parameters = [])
     {
-        return $this->execute('get', "{$resource}/{$resourceIdOrKey}/notificationscheme", $parameters);
+        return $this->execute('get', "dashboard/{$dashboardIdOrKey}/notificationscheme", $parameters);
     }
 }
