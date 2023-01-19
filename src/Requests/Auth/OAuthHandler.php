@@ -153,9 +153,17 @@ class OAuthHandler extends Jira
      *
      * @return \League\OAuth2\Client\Provider\ResourceOwnerInterface
      */
-    public function getOwner()
+    public function getMe()
     {
-        return $this->getResourceOwner($this->token);
+        $response = Http::accept('application/json')
+            ->withToken($this->token->getToken())
+            ->get('https://api.atlassian.com/me');
+
+        if ($response->status() === 200) {
+            return json_decode($response->body(), true);
+        } else {
+            throw new JiraClientException('Cannot get current user', $response->status());
+        }
     }
 
     /**
