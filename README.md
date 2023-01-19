@@ -56,14 +56,8 @@ For example, to fetch a specific issue you could do the following
 <?php
 
 $request = new \Atlassian\JiraRest\Requests\Issue\IssueRequest;
-$response = $request->get('ISSUE-3');
+$response = $request->get('ISSUE-3'); // Array
 ```
-
-All responses are an instance of `\GuzzleHttp\Psr7\Response` [Read more](http://docs.guzzlephp.org/en/stable/psr7.html) so in order to get the json response you could do the following:
-```php
-$response = json_decode($response->getBody(), true);
-``` 
-Which will return a response like seen in the [API](https://developer.atlassian.com/cloud/jira/platform/rest/#api-api-2-issue-issueIdOrKey-get)
 
 ### Parameters
 Sending parameter with requests is possible via two ways
@@ -132,8 +126,8 @@ $scopes = ['read:jira-user', 'read:jira-work', ...];
 
 // $clientId and $secret you can get from .env file
 
-$auth = new OAuthHandler($clientId, $secret, $url, , $scopes);
-$auth->authenticate($state);
+$auth = new OAuthHandler($clientId, $secret, $url, $user-unique-identifier, $scopes);
+$auth->authenticate();
 ```
 
 After that user user will be automaticaly redirected to Jira for authentication.
@@ -141,7 +135,7 @@ In you `callback-url` route:
 
 ```
 $params = $request->only('state', 'code');
-$data = $this->authHandler->getAccessTokens($params['code']);
+$data = $this->authHandler->getAccessTokens($params);
 
 // $data['cloudId']);
 // $data['accessToken']);
@@ -152,20 +146,13 @@ $data = $this->authHandler->getAccessTokens($params['code']);
 Get issue with OAuth 2.0:
 
 ```
-$params = [
-    'cloudId' => $cloudId,
-    'accessToken' => $accessToken,
-];
-
-$request = new \Atlassian\JiraRest\Requests\Issue\IssueRequest;
-$response = $request->get('ISSUE-3', $params);
-$response = json_decode($response->getBody(), true);
+$response = $auth->issue()->->get('ISSUE-3');
 ```
 
 Refresh access token:
 
 ```
-$data = OAuthHandler::refreshAccessTokens($clientId, $secret,, $refreshToken);
+$data = $auth->refreshAccessTokens($clientId, $secret, $refreshToken);
 
 // $data['accessToken']);
 // $data['refreshToken']);
@@ -224,14 +211,3 @@ To impersonate a user through Jira requests you must set `JIRA_IMPERSONATE=true`
 
 Once impersonation is enabled, Laravel will use the authentificated users' `name` by default. 
 However, it's also possible to impersonate a user manually by sending a user's name to constructor of the middleware. To do this you would need to manually register the middleware and pass the user.
-
-
-**JIRA Setup for Impersonation**
-1. Follow [Jira documentation](https://developer.atlassian.com/server/jira/platform/oauth/#see-it-in-action) to generate an RSA public/private key pair.
-2. Go to Jira --> Application Links (Admin)
-3. Create a new link with your server url 
-4. Ignore the "No response" warning
-5. Enter anything in all the field and keep "Create incoming link unchecked". Jira has a weird behaviour when it comes to setting up app links. If you create your incoming link now, you won't have access to 2-Legged auth (Impersonation).
-6. Click continue (ignore the warning). This should have created your new app link.
-7. Edit that link (notice there are no Outgoing info even if you added dummy info at creation).
-8. You may now enter all the info for OAuth and setup impersonation (Allow 2-Legged OAuth). 
