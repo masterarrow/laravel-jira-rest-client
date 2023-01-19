@@ -7,6 +7,16 @@ use Atlassian\JiraRest\Requests\AbstractRequest;
 class FieldRequest extends AbstractRequest
 {
     /**
+     * @param array $options ['cloudId' => string, 'accessToken' => sting]
+     */
+    public function __construct($options = [])
+    {
+        if (isset($options['cloudId']) && isset($options['accessToken'])) {
+            parent::__construct($options);
+        }
+    }
+    
+    /**
      * Returns a list of all fields, both System and Custom
      *
      * @see https://developer.atlassian.com/cloud/jira/platform/rest/#api-api-2-field-get
