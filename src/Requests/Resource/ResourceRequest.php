@@ -7,6 +7,16 @@ use Atlassian\JiraRest\Requests\AbstractRequest;
 class ResourceRequest extends AbstractRequest
 {
     /**
+     * @param array $options ['cloudId' => string, 'accessToken' => sting]
+     */
+    public function __construct($options = [])
+    {
+        if (isset($options['cloudId']) && isset($options['accessToken'])) {
+            parent::__construct($options);
+        }
+    }
+
+    /**
      * Returns all projects visible for the currently logged in user, ie. all the projects the user has either ‘Browse
      * projects’ or ‘Administer projects’ permission.
      * If no user is logged in, it returns all projects that are visible for anonymous users.
