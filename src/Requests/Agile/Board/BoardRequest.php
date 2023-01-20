@@ -7,6 +7,16 @@ use Atlassian\JiraRest\Requests\Agile\AbstractRequest;
 class BoardRequest extends AbstractRequest
 {
     /**
+     * @param array $options ['cloudId' => string, 'accessToken' => sting]
+     */
+    public function __construct($options = [])
+    {
+        if (isset($options['cloudId']) && isset($options['accessToken'])) {
+            parent::__construct($options);
+        }
+    }
+    
+    /**
      * Returns all boards.
      * This only includes boards that the user has permission to view.
      *
