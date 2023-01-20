@@ -125,7 +125,11 @@ class DevelopmentInformationRequest extends AbstractRequest
      */
     public function getApi()
     {
-        return 'rest/devinfo/0.10';
+        if (isset($this->cloudId) /*&& isset($this->token)*/) {
+            return $this->cloudId . '/rest/devinfo/0.10';
+        }
+
+        return '/rest/devinfo/0.10';
     }
 
 }
