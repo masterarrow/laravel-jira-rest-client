@@ -34,6 +34,16 @@ abstract class AbstractRequest
     protected $async = false;
 
     /**
+     * @var string
+     */
+    protected $cloudId;
+
+    /**
+     * @var string
+     */
+    protected $token;
+
+    /**
      * BaseRequest constructor.
      *
      * @param array $options    Authentication data ['cloudId' => string, 'accessToken' => string]
