@@ -12,6 +12,16 @@ use Atlassian\JiraRest\Requests\Agile\AbstractRequest;
 class BacklogRequest extends AbstractRequest
 {
     /**
+     * @param array $options ['cloudId' => string, 'accessToken' => sting]
+     */
+    public function __construct($options = [])
+    {
+        if (isset($options['cloudId']) && isset($options['accessToken'])) {
+            parent::__construct($options);
+        }
+    }
+    
+    /**
      * Move issues to the backlog.
      *
      * This operation is equivalent to remove future and active sprints from a given set of issues.
