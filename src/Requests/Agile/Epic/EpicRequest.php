@@ -7,6 +7,16 @@ use Atlassian\JiraRest\Requests\Agile\AbstractRequest;
 class EpicRequest extends AbstractRequest
 {
     /**
+     * @param array $options ['cloudId' => string, 'accessToken' => sting]
+     */
+    public function __construct($options = [])
+    {
+        if (isset($options['cloudId']) && isset($options['accessToken'])) {
+            parent::__construct($options);
+        }
+    }
+    
+    /**
      * Returns all issues that do not belong to any epic.
      * This only includes issues that the user has permission to view.
      * Issues returned from this resource include Agile fields, like sprint, closedSprints, flagged, and epic.
