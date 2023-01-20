@@ -294,6 +294,106 @@ class OAuthHandler extends Jira
     }
 
     /**
+     * Agile Board
+     *
+     * @return \Atlassian\JiraRest\Requests\Agile\Board\BoardRequest
+     */
+    public function board()
+    {
+        return new \Atlassian\JiraRest\Requests\Agile\Board\BoardRequest($this->getAuthParams());
+    }
+
+    /**
+     * Agile Backlog
+     *
+     * @return \Atlassian\JiraRest\Requests\Agile\Backlog\BacklogRequest
+     */
+    public function backlog()
+    {
+        return new \Atlassian\JiraRest\Requests\Agile\Backlog\BacklogRequest($this->getAuthParams());
+    }
+
+    /**
+     * Agile Epic
+     *
+     * @return \Atlassian\JiraRest\Requests\Agile\Epic\EpicRequest
+     */
+    public function epic()
+    {
+        return new \Atlassian\JiraRest\Requests\Agile\Epic\EpicRequest($this->getAuthParams());
+    }
+
+    /**
+     * Agile Issue
+     *
+     * @return \Atlassian\JiraRest\Requests\Agile\Issue\IssueRequest
+     */
+    public function agileIssue()
+    {
+        return new \Atlassian\JiraRest\Requests\Agile\Issue\IssueRequest($this->getAuthParams());
+    }
+
+    /**
+     * Agile Sprint
+     *
+     * @return \Atlassian\JiraRest\Requests\Agile\Sprint\SprintRequest
+     */
+    public function sprint()
+    {
+        return new \Atlassian\JiraRest\Requests\Agile\Sprint\SprintRequest($this->getAuthParams());
+    }
+
+    /**
+     * Builds
+     *
+     * @return \Atlassian\JiraRest\Requests\Agile\BuildsRequest
+     */
+    public function builds()
+    {
+        return new \Atlassian\JiraRest\Requests\Agile\BuildsRequest($this->getAuthParams());
+    }
+
+    /**
+     * Deployments
+     *
+     * @return \Atlassian\JiraRest\Requests\Agile\DeploymentsRequest
+     */
+    public function deployments()
+    {
+        return new \Atlassian\JiraRest\Requests\Agile\DeploymentsRequest($this->getAuthParams());
+    }
+
+    /**
+     * Development Information
+     *
+     * @return \Atlassian\JiraRest\Requests\Agile\DevelopmentInformationRequest
+     */
+    public function developmentInformation()
+    {
+        return new \Atlassian\JiraRest\Requests\Agile\DevelopmentInformationRequest($this->getAuthParams());
+    }
+
+    /**
+     * Feature Flags
+     *
+     * @return \Atlassian\JiraRest\Requests\Agile\FeatureFlagsRequest
+     */
+    public function featureFlags()
+    {
+        return new \Atlassian\JiraRest\Requests\Agile\FeatureFlagsRequest($this->getAuthParams());
+    }
+
+    /**
+     * Server Info
+     *
+     * @return \Atlassian\JiraRest\Requests\ServerInfoRequest
+     */
+    public function serverInfo()
+    {
+        return new \Atlassian\JiraRest\Requests\ServerInfoRequest($this->getAuthParams());
+    }
+
+    /**
      * Set authentication parameters
      *
      * @param array|\Illuminate\Contracts\Support\Arrayable $parameters ['cloudId', 'accessToken', 'refreshToken', 'expires']
