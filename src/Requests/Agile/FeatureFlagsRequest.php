@@ -94,7 +94,11 @@ class FeatureFlagsRequest extends AbstractRequest
      */
     public function getApi()
     {
-        return 'rest/featureflags/0.1';
+        if (isset($this->cloudId) /*&& isset($this->token)*/) {
+            return $this->cloudId . '/rest/featureflags/0.1';
+        }
+
+        return '/rest/featureflags/0.1';
     }
 
 }
