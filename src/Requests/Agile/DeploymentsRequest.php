@@ -103,7 +103,11 @@ class DeploymentsRequest extends AbstractRequest
      */
     public function getApi()
     {
-        return 'rest/deployments/0.1';
+        if (isset($this->cloudId) /*&& isset($this->token)*/) {
+            return $this->cloudId . '/rest/deployments/0.1';
+        }
+
+        return '/rest/deployments/0.1';
     }
 
 }
