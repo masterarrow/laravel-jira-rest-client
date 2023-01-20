@@ -11,6 +11,10 @@ abstract class AbstractRequest extends \Atlassian\JiraRest\Requests\AbstractRequ
      */
     public function getApi()
     {
-        return 'rest/agile/1.0';
+        if (isset($this->cloudId) /*&& isset($this->token)*/) {
+            return $this->cloudId . '/rest/agile/1.0';
+        }
+
+        return '/rest/agile/1.0';
     }
 }
