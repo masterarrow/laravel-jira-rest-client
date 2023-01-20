@@ -96,7 +96,11 @@ class BuildsRequest extends AbstractRequest
      */
     public function getApi()
     {
-        return 'rest/builds/0.1';
+        if (isset($this->cloudId) /*&& isset($this->token)*/) {
+            return $this->cloudId . '/rest/builds/0.1';
+        }
+
+        return '/rest/builds/0.1';
     }
 
 }
