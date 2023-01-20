@@ -5,6 +5,16 @@ namespace Atlassian\JiraRest\Requests\Agile;
 class DevelopmentInformationRequest extends AbstractRequest
 {
     /**
+     * @param array $options ['cloudId' => string, 'accessToken' => sting]
+     */
+    public function __construct($options = [])
+    {
+        if (isset($options['cloudId']) && isset($options['accessToken'])) {
+            parent::__construct($options);
+        }
+    }
+    
+    /**
      * Stores development information provided in the request to make it available when viewing issues in JIRA.
      *
      * @see https://developer.atlassian.com/cloud/jira/software/rest/#api-rest-devinfo-0-10-bulk-post
