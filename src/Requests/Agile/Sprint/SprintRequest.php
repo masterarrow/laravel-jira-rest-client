@@ -12,6 +12,16 @@ use Atlassian\JiraRest\Requests\Agile\AbstractRequest;
 class SprintRequest extends AbstractRequest
 {
     /**
+     * @param array $options ['cloudId' => string, 'accessToken' => sting]
+     */
+    public function __construct($options = [])
+    {
+        if (isset($options['cloudId']) && isset($options['accessToken'])) {
+            parent::__construct($options);
+        }
+    }
+    
+    /**
      * Creates a future sprint. Sprint name and origin board id are required.
      * Start date, end date, and goal are optional.
      *
