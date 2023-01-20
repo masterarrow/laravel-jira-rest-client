@@ -39,6 +39,10 @@ class WorkflowRequest extends AbstractRequest
      */
     public function getApi()
     {
-        return 'rest/api/3';
+        if (isset($this->cloudId) /*&& isset($this->token)*/) {
+            return $this->cloudId . '/rest/api/3';
+        }
+
+        return '/rest/api/3';
     }
 }
