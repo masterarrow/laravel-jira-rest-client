@@ -7,6 +7,16 @@ use Atlassian\JiraRest\Requests\Agile\AbstractRequest;
 class IssueRequest extends AbstractRequest
 {
     /**
+     * @param array $options ['cloudId' => string, 'accessToken' => sting]
+     */
+    public function __construct($options = [])
+    {
+        if (isset($options['cloudId']) && isset($options['accessToken'])) {
+            parent::__construct($options);
+        }
+    }
+    
+    /**
      * Moves (ranks) issues before or after a given issue. At most 50 issues may be ranked at once.
      *
      * This operation may fail for some issues, although this will be rare.
