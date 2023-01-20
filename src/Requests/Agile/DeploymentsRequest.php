@@ -5,6 +5,16 @@ namespace Atlassian\JiraRest\Requests\Agile;
 class DeploymentsRequest extends AbstractRequest
 {
     /**
+     * @param array $options ['cloudId' => string, 'accessToken' => sting]
+     */
+    public function __construct($options = [])
+    {
+        if (isset($options['cloudId']) && isset($options['accessToken'])) {
+            parent::__construct($options);
+        }
+    }
+    
+    /**
      * Update / insert deployment data.
      *
      * @see https://developer.atlassian.com/cloud/jira/software/rest/#api-rest-deployments-0-1-bulk-post
