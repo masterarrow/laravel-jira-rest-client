@@ -254,4 +254,24 @@ class IssueRequest extends AbstractRequest
     {
         return $this->execute('post', "issue/{$issueIdOrKey}/transitions", $parameters);
     }
+
+    /**
+     * Get issue watchers.
+     *
+     * @see https://developer.atlassian.com/cloud/jira/platform/rest/v2/api-group-issue-watchers/#api-rest-api-2-issue-issueidorkey-watchers-get
+     *
+     * @param  string|int  $issueIdOrKey
+     * @param  array|\Illuminate\Contracts\Support\Arrayable  $parameters
+     *
+     * @return \GuzzleHttp\Psr7\Response
+     * @throws \Atlassian\JiraRest\Exceptions\JiraClientException
+     * @throws \Atlassian\JiraRest\Exceptions\JiraNotFoundException
+     * @throws \Atlassian\JiraRest\Exceptions\JiraUnauthorizedException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws \TypeError
+     */
+    public function watchers($issueIdOrKey, $parameters = [])
+    {
+        return $this->execute('get', "issue/{$issueIdOrKey}/watchers", $parameters);
+    }
 }
