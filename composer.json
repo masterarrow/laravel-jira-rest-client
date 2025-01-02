@@ -32,6 +32,9 @@
             ],
             "aliases": {
                 "Jira": "Atlassian\\JiraRest\\Facades\\Jira"
+            },
+            "branch-alias": {
+                "dev-master": "0.0.1"
             }
         }
     },
